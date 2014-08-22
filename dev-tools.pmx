@@ -1,0 +1,68 @@
+---
+name: dev-tools
+description: ''
+keywords: ''
+type: Java
+documentation: ''
+images:
+- name: orchardup_postgresql_9.3
+  source: orchardup/postgresql:9.3
+  category: db
+  type: Default
+  expose:
+  - '5432'
+  environment:
+  - variable: POSTGRESQL_DB
+    value: sonar
+  - variable: POSTGRESQL_USER
+    value: sonar
+  - variable: POSTGRESQL_PASS
+    value: sonar
+- name: grzesiekw_jenkins
+  source: grzesiekw/jenkins:latest
+  category: tools
+  type: Default
+  expose:
+  - '8080'
+  environment:
+  - variable: JENKINS_ARGS
+    value: "--prefix=/jenkins"
+- name: grzesiekw_nexus
+  source: grzesiekw/nexus:latest
+  category: tools
+  type: Default
+- name: grzesiekw_sonar
+  source: grzesiekw/sonar:4.4
+  category: tools
+  type: Default
+  expose:
+  - '9000'
+  links:
+  - service: orchardup_postgresql_9.3
+    alias: db
+  environment:
+  - variable: SONAR_WEB_CONTEXT
+    value: "/sonar"
+  - variable: SONAR_JDBC_URL
+    value: jdbc:postgresql://db/sonar
+  - variable: SONAR_DB_USERNAME
+    value: sonar
+  - variable: SONAR_DB_PASSWORD
+    value: sonar
+- name: grzesiekw_tools-proxy
+  source: grzesiekw/tools-proxy:latest
+  category: web
+  type: Default
+  expose:
+  - '8080'
+  ports:
+  - host_port: '8080'
+    container_port: '8080'
+    proto: TCP
+  links:
+  - service: grzesiekw_jenkins
+    alias: jenkins
+  - service: grzesiekw_nexus
+    alias: nexus
+  - service: grzesiekw_sonar
+    alias: sonar
